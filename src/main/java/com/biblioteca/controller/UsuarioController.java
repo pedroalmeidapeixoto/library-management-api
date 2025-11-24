@@ -1,44 +1,54 @@
 package com.biblioteca.controller;
 
+import com.biblioteca.dto.usuario.UsuarioRequestDTO;
+import com.biblioteca.dto.usuario.UsuarioResponseDTO;
+import com.biblioteca.mapper.UsuarioMapper;
 import com.biblioteca.model.Usuario;
-import com.biblioteca.model.Emprestimo;
-import com.biblioteca.model.Multa;
-import com.biblioteca.model.Reserva;
 import com.biblioteca.service.UsuarioService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/usuarios")
-@RequiredArgsConstructor
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final UsuarioMapper usuarioMapper;
+
+    public UsuarioController(UsuarioService usuarioService, UsuarioMapper usuarioMapper) {
+        this.usuarioService = usuarioService;
+        this.usuarioMapper = usuarioMapper;
+    }
 
     @PostMapping
-    public Usuario criar(@RequestBody Usuario usuario) {
-        return usuarioService.criarUsuario(usuario);
+    public ResponseEntity<UsuarioResponseDTO> criar(@RequestBody UsuarioRequestDTO dto) {
+        Usuario usuario = usuarioMapper.toEntity(dto);
+        Usuario salvo = usuarioService.criar(usuario);
+        return ResponseEntity.status(201).body(usuarioMapper.toResponse(salvo));
     }
 
     @GetMapping("/{id}")
-    public Usuario buscar(@PathVariable Long id) {
-        return usuarioService.buscarPorId(id);
+    public ResponseEntity<UsuarioResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                usuarioMapper.toResponse(usuarioService.buscarPorId(id))
+        );
     }
 
-    @GetMapping("/{id}/emprestimos")
-    public List<Emprestimo> emprestimos(@PathVariable Long id) {
-        return usuarioService.listarEmprestimos(id);
+    @GetMapping
+    public ResponseEntity<List<UsuarioResponseDTO>> listar() {
+        return ResponseEntity.ok(
+                usuarioService.listar()
+                        .stream()
+                        .map(usuarioMapper::toResponse)
+                        .toList()
+        );
     }
 
-    @GetMapping("/{id}/reservas")
-    public List<Reserva> reservas(@PathVariable Long id) {
-        return usuarioService.listarReservas(id);
-    }
-
-    @GetMapping("/{id}/multas")
-    public List<Multa> multas(@PathVariable Long id) {
-        return usuarioService.listarMultas(id);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        usuarioService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 }

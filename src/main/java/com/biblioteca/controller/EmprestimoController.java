@@ -1,32 +1,48 @@
 package com.biblioteca.controller;
 
+import com.biblioteca.dto.emprestimo.EmprestimoResponseDTO;
+import com.biblioteca.mapper.EmprestimoMapper;
 import com.biblioteca.model.Emprestimo;
 import com.biblioteca.service.EmprestimoService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/emprestimos")
-@RequiredArgsConstructor
 public class EmprestimoController {
 
     private final EmprestimoService emprestimoService;
+    private final EmprestimoMapper emprestimoMapper;
 
-    @PostMapping("/realizar")
-    public Emprestimo realizar(
+    public EmprestimoController(EmprestimoService emprestimoService, EmprestimoMapper emprestimoMapper) {
+        this.emprestimoService = emprestimoService;
+        this.emprestimoMapper = emprestimoMapper;
+    }
+
+    @PostMapping
+    public ResponseEntity<EmprestimoResponseDTO> emprestar(
             @RequestParam Long idUsuario,
             @RequestParam Long idExemplar
     ) {
-        return emprestimoService.realizarEmprestimo(idUsuario, idExemplar);
+        Emprestimo emp = emprestimoService.realizarEmprestimo(idUsuario, idExemplar);
+        return ResponseEntity.status(201).body(emprestimoMapper.toResponse(emp));
     }
 
-    @PostMapping("/{id}/devolver")
-    public Emprestimo devolver(@PathVariable Long id) {
-        return emprestimoService.finalizarEmprestimo(id);
+    @PostMapping("/devolucao/{id}")
+    public ResponseEntity<EmprestimoResponseDTO> devolver(@PathVariable Long id) {
+        Emprestimo emp = emprestimoService.realizarDevolucao(id);
+        return ResponseEntity.ok(emprestimoMapper.toResponse(emp));
     }
 
-    @GetMapping("/{id}")
-    public Emprestimo buscar(@PathVariable Long id) {
-        return emprestimoService.buscarPorId(id);
+    @GetMapping
+    public ResponseEntity<List<EmprestimoResponseDTO>> listar() {
+        return ResponseEntity.ok(
+                emprestimoService.listar()
+                        .stream()
+                        .map(emprestimoMapper::toResponse)
+                        .toList()
+        );
     }
 }

@@ -1,32 +1,42 @@
 package com.biblioteca.controller;
 
+import com.biblioteca.dto.reserva.ReservaResponseDTO;
+import com.biblioteca.mapper.ReservaMapper;
 import com.biblioteca.model.Reserva;
 import com.biblioteca.service.ReservaService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/reservas")
-@RequiredArgsConstructor
 public class ReservaController {
 
     private final ReservaService reservaService;
+    private final ReservaMapper reservaMapper;
+
+    public ReservaController(ReservaService reservaService, ReservaMapper reservaMapper) {
+        this.reservaService = reservaService;
+        this.reservaMapper = reservaMapper;
+    }
 
     @PostMapping
-    public Reserva criar(
+    public ResponseEntity<ReservaResponseDTO> reservar(
             @RequestParam Long idUsuario,
             @RequestParam Long idExemplar
     ) {
-        return reservaService.criarReserva(idUsuario, idExemplar);
+        Reserva reserva = reservaService.criarReserva(idUsuario, idExemplar);
+        return ResponseEntity.status(201).body(reservaMapper.toResponse(reserva));
     }
 
-    @PostMapping("/{id}/cancelar")
-    public Reserva cancelar(@PathVariable Long id) {
-        return reservaService.cancelarReserva(id);
-    }
-
-    @PostMapping("/processar-expiradas")
-    public void processarExpiradas() {
-        reservaService.processarReservasExpiradas();
+    @GetMapping
+    public ResponseEntity<List<ReservaResponseDTO>> listar() {
+        return ResponseEntity.ok(
+                reservaService.listar()
+                        .stream()
+                        .map(reservaMapper::toResponse)
+                        .toList()
+        );
     }
 }

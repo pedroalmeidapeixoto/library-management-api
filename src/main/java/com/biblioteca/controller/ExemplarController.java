@@ -1,45 +1,48 @@
 package com.biblioteca.controller;
 
+import com.biblioteca.dto.exemplar.ExemplarRequestDTO;
+import com.biblioteca.dto.exemplar.ExemplarResponseDTO;
+import com.biblioteca.mapper.ExemplarMapper;
 import com.biblioteca.model.Exemplar;
-import com.biblioteca.model.enums.StatusExemplar;
 import com.biblioteca.service.ExemplarService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/exemplares")
-@RequiredArgsConstructor
 public class ExemplarController {
 
     private final ExemplarService exemplarService;
+    private final ExemplarMapper exemplarMapper;
+
+    public ExemplarController(ExemplarService exemplarService, ExemplarMapper exemplarMapper) {
+        this.exemplarService = exemplarService;
+        this.exemplarMapper = exemplarMapper;
+    }
 
     @PostMapping
-    public Exemplar criar(@RequestBody Exemplar exemplar) {
-        return exemplarService.criarExemplar(exemplar);
+    public ResponseEntity<ExemplarResponseDTO> criar(@RequestBody ExemplarRequestDTO dto) {
+        Exemplar exemplar = exemplarMapper.toEntity(dto);
+        Exemplar salvo = exemplarService.criar(exemplar, dto.getIdLivro());
+        return ResponseEntity.status(201).body(exemplarMapper.toResponse(salvo));
     }
 
     @GetMapping("/{id}")
-    public Exemplar buscar(@PathVariable Long id) {
-        return exemplarService.buscarPorId(id);
+    public ResponseEntity<ExemplarResponseDTO> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                exemplarMapper.toResponse(exemplarService.buscarPorId(id))
+        );
     }
 
-    @GetMapping("/livro/{idLivro}")
-    public List<Exemplar> listarPorLivro(@PathVariable Long idLivro) {
-        return exemplarService.listarPorLivro(idLivro);
-    }
-
-    @GetMapping("/{id}/disponivel")
-    public boolean estaDisponivel(@PathVariable Long id) {
-        return exemplarService.estaDisponivel(id);
-    }
-
-    @PutMapping("/{id}/status")
-    public Exemplar atualizarStatus(
-            @PathVariable Long id,
-            @RequestParam StatusExemplar status
-    ) {
-        return exemplarService.atualizarStatus(id, status);
+    @GetMapping
+    public ResponseEntity<List<ExemplarResponseDTO>> listar() {
+        return ResponseEntity.ok(
+                exemplarService.listar()
+                        .stream()
+                        .map(exemplarMapper::toResponse)
+                        .toList()
+        );
     }
 }
