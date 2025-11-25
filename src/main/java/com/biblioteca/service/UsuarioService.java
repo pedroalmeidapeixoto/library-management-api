@@ -24,18 +24,34 @@ public class UsuarioService {
     private final MultaRepository multaRepository;
 
     // -------------------------------------------------------
-    // Criar usuário
+    // Criar usuário (Controller chama este método)
     // -------------------------------------------------------
-    public Usuario criarUsuario(Usuario usuario) {
+    public Usuario criar(Usuario usuario) {
         return usuarioRepository.save(usuario);
     }
 
     // -------------------------------------------------------
-    // Buscar usuário
+    // Buscar usuário por ID
     // -------------------------------------------------------
     public Usuario buscarPorId(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+    }
+
+    // -------------------------------------------------------
+    // Listar todos os usuários (Controller chama este método)
+    // -------------------------------------------------------
+    public List<Usuario> listar() {
+        return usuarioRepository.findAll();
+    }
+
+    // -------------------------------------------------------
+    // Deletar usuário (Controller chama este método)
+    // -------------------------------------------------------
+    public void deletar(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+        usuarioRepository.delete(usuario);
     }
 
     // -------------------------------------------------------

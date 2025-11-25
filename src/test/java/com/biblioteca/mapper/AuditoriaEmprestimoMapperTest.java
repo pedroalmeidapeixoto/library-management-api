@@ -6,13 +6,15 @@ import com.biblioteca.model.Emprestimo;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
+
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+
 public class AuditoriaEmprestimoMapperTest {
 
-    private final AuditoriaEmprestimoMapper mapper = Mappers.getMapper(AuditoriaEmprestimoMapper.class);
+    private final AuditoriaEmprestimoMapperTest mapper = Mappers.getMapper(AuditoriaEmprestimoMapperTest.class);
 
     @Test
     void testToResponseDTO() {

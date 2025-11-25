@@ -20,11 +20,9 @@ public class ExemplarService {
     private final LivroRepository livroRepository;
 
     // -------------------------------------------------------
-    // Criar exemplar
+    // Criar exemplar (Controller chama este método)
     // -------------------------------------------------------
-    public Exemplar criarExemplar(Exemplar exemplar) {
-
-        Long idLivro = exemplar.getLivro().getId();
+    public Exemplar criar(Exemplar exemplar, Long idLivro) {
 
         Livro livro = livroRepository.findById(idLivro)
                 .orElseThrow(() -> new NotFoundException("Livro não encontrado"));
@@ -36,7 +34,7 @@ public class ExemplarService {
     }
 
     // -------------------------------------------------------
-    // Buscar exemplar
+    // Buscar exemplar por ID
     // -------------------------------------------------------
     public Exemplar buscarPorId(Long id) {
         return exemplarRepository.findById(id)
@@ -44,7 +42,14 @@ public class ExemplarService {
     }
 
     // -------------------------------------------------------
-    // Listar por livro
+    // Listar todos os exemplares (Controller chama este método)
+    // -------------------------------------------------------
+    public List<Exemplar> listar() {
+        return exemplarRepository.findAll();
+    }
+
+    // -------------------------------------------------------
+    // Listar exemplares por livro
     // -------------------------------------------------------
     public List<Exemplar> listarPorLivro(Long idLivro) {
         return exemplarRepository.findByLivroId(idLivro);

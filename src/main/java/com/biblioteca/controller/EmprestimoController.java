@@ -32,7 +32,8 @@ public class EmprestimoController {
 
     @PostMapping("/devolucao/{id}")
     public ResponseEntity<EmprestimoResponseDTO> devolver(@PathVariable Long id) {
-        Emprestimo emp = emprestimoService.realizarDevolucao(id);
+        // Corrigido para chamar o método correto do service
+        Emprestimo emp = emprestimoService.finalizarEmprestimo(id);
         return ResponseEntity.ok(emprestimoMapper.toResponse(emp));
     }
 

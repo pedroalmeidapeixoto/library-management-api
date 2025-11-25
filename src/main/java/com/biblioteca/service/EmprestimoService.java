@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,17 +35,24 @@ public class EmprestimoService {
     private static final int PRAZO_PADRAO_DIAS = 7;
     private static final double MULTA_POR_DIA = 2.0;
 
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------------
     // Buscar empréstimo
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------------
     public Emprestimo buscarPorId(Long id) {
         return emprestimoRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Empréstimo não encontrado"));
     }
 
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------------
+    // Listar todos empréstimos
+    // -------------------------------------------------------
+    public List<Emprestimo> listar() {
+        return emprestimoRepository.findAll();
+    }
+
+    // -------------------------------------------------------
     // Realizar empréstimo
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------------
     public Emprestimo realizarEmprestimo(Long idUsuario, Long idExemplar) {
 
         Usuario usuario = usuarioRepository.findById(idUsuario)
@@ -57,9 +65,11 @@ public class EmprestimoService {
             throw new ConflictException("Exemplar não está disponível para empréstimo");
         }
 
-        // Cancelar reservas anteriores do usuário para esse exemplar (opcional)
-        reservaRepository.findByUsuarioIdAndExemplarIdAndAtivaTrue(idUsuario, idExemplar)
-                .ifPresent(r -> {
+        // Cancelar reservas ativas do usuário para esse exemplar
+        List<Reserva> reservas = reservaRepository.findByUsuarioId(idUsuario);
+        reservas.stream()
+                .filter(r -> r.getExemplar().getId().equals(idExemplar) && r.isAtiva())
+                .forEach(r -> {
                     r.setAtiva(false);
                     reservaRepository.save(r);
                 });
@@ -77,13 +87,11 @@ public class EmprestimoService {
         return emprestimoRepository.save(emprestimo);
     }
 
-    // ------------------------------------------------------------------------
-    // Finalizar empréstimo (devolução)
-    // ------------------------------------------------------------------------
-    public Emprestimo finalizarEmprestimo(Long idEmprestimo) {
-
-        Emprestimo emprestimo = emprestimoRepository.findById(idEmprestimo)
-                .orElseThrow(() -> new NotFoundException("Empréstimo não encontrado"));
+    // -------------------------------------------------------
+    // Realizar devolução
+    // -------------------------------------------------------
+    public Emprestimo realizarDevolucao(Long idEmprestimo) {
+        Emprestimo emprestimo = buscarPorId(idEmprestimo);
 
         if (emprestimo.getStatus() != StatusEmprestimo.ATIVO) {
             throw new BusinessException("Este empréstimo já foi finalizado");
@@ -105,14 +113,13 @@ public class EmprestimoService {
         return emprestimoRepository.save(emprestimo);
     }
 
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------------
     // Calcular multa
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------------
     private void gerarMulta(Emprestimo emprestimo) {
-
         long diasAtraso = ChronoUnit.DAYS.between(
                 emprestimo.getDataPrevistaDevolucao(),
-                LocalDate.now()
+                emprestimo.getDataDevolucao()
         );
 
         double valor = diasAtraso * MULTA_POR_DIA;

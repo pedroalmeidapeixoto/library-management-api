@@ -22,6 +22,9 @@ public class ExemplarController {
         this.exemplarMapper = exemplarMapper;
     }
 
+    // -------------------------------------------------------
+    // Criar exemplar
+    // -------------------------------------------------------
     @PostMapping
     public ResponseEntity<ExemplarResponseDTO> criar(@RequestBody ExemplarRequestDTO dto) {
         Exemplar exemplar = exemplarMapper.toEntity(dto);
@@ -29,20 +32,24 @@ public class ExemplarController {
         return ResponseEntity.status(201).body(exemplarMapper.toResponse(salvo));
     }
 
+    // -------------------------------------------------------
+    // Buscar exemplar por ID
+    // -------------------------------------------------------
     @GetMapping("/{id}")
     public ResponseEntity<ExemplarResponseDTO> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(
-                exemplarMapper.toResponse(exemplarService.buscarPorId(id))
-        );
+        Exemplar exemplar = exemplarService.buscarPorId(id);
+        return ResponseEntity.ok(exemplarMapper.toResponse(exemplar));
     }
 
+    // -------------------------------------------------------
+    // Listar todos os exemplares
+    // -------------------------------------------------------
     @GetMapping
     public ResponseEntity<List<ExemplarResponseDTO>> listar() {
-        return ResponseEntity.ok(
-                exemplarService.listar()
-                        .stream()
-                        .map(exemplarMapper::toResponse)
-                        .toList()
-        );
+        List<Exemplar> exemplares = exemplarService.listar();
+        List<ExemplarResponseDTO> response = exemplares.stream()
+                .map(exemplarMapper::toResponse)
+                .toList();
+        return ResponseEntity.ok(response);
     }
 }

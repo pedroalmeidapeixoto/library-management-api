@@ -4,8 +4,12 @@ import com.biblioteca.dto.usuario.UsuarioRequestDTO;
 import com.biblioteca.dto.usuario.UsuarioResponseDTO;
 import com.biblioteca.model.Usuario;
 import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+        componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
 public interface UsuarioMapper {
 
     Usuario toEntity(UsuarioRequestDTO dto);
