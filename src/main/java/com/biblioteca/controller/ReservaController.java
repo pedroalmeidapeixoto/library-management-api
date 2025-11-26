@@ -26,7 +26,8 @@ public class ReservaController {
             @RequestParam Long idUsuario,
             @RequestParam Long idExemplar
     ) {
-        Reserva reserva = reservaService.criarReserva(idUsuario, idExemplar);
+        // Aqui estava o erro — método correto é "reservar"
+        Reserva reserva = reservaService.reservar(idUsuario, idExemplar);
         return ResponseEntity.status(201).body(reservaMapper.toResponse(reserva));
     }
 

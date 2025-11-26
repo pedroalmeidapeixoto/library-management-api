@@ -7,13 +7,15 @@ import com.biblioteca.model.Exemplar;
 import com.biblioteca.model.Reserva;
 import com.biblioteca.model.Usuario;
 import com.biblioteca.model.enums.StatusExemplar;
+import com.biblioteca.model.enums.StatusReserva;
 import com.biblioteca.repository.ExemplarRepository;
 import com.biblioteca.repository.ReservaRepository;
 import com.biblioteca.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -23,12 +25,20 @@ public class ReservaService {
     private final UsuarioRepository usuarioRepository;
     private final ExemplarRepository exemplarRepository;
 
-    private static final int PRAZO_RESERVA_HORAS = 48;
+    // Quantas horas uma reserva dura?
+    private static final int HORAS_VALIDADE = 24;
 
-    // -------------------------------------------------------
+    public Reserva buscarPorId(Long id) {
+        return reservaRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Reserva não encontrada"));
+    }
+
+    public List<Reserva> listar() {
+        return reservaRepository.findAll();
+    }
+
     // Criar reserva
-    // -------------------------------------------------------
-    public Reserva criarReserva(Long idUsuario, Long idExemplar) {
+    public Reserva reservar(Long idUsuario, Long idExemplar) {
 
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
@@ -37,52 +47,43 @@ public class ReservaService {
                 .orElseThrow(() -> new NotFoundException("Exemplar não encontrado"));
 
         if (exemplar.getStatus() != StatusExemplar.DISPONIVEL) {
-            throw new ConflictException("Exemplar não está disponível para reserva");
+            throw new ConflictException("Exemplar indisponível para reserva");
         }
-
-        // Verificar reserva duplicada ativa
-        reservaRepository.findByUsuarioIdAndExemplarIdAndAtivaTrue(idUsuario, idExemplar)
-                .ifPresent(r -> {
-                    throw new ConflictException("Este usuário já possui uma reserva ativa para este exemplar");
-                });
 
         Reserva reserva = new Reserva();
         reserva.setUsuario(usuario);
         reserva.setExemplar(exemplar);
-        reserva.setDataReserva(LocalDate.now());
-        reserva.setDataLimite(LocalDate.now().plusHours(PRAZO_RESERVA_HORAS));
-        reserva.setAtiva(true);
+        reserva.setDataReserva(LocalDateTime.now());
+        reserva.setDataValidade(LocalDateTime.now().plusHours(HORAS_VALIDADE));
+        reserva.setStatus(StatusReserva.ATIVA);
 
         return reservaRepository.save(reserva);
     }
 
-    // -------------------------------------------------------
     // Cancelar reserva
-    // -------------------------------------------------------
-    public Reserva cancelarReserva(Long idReserva) {
+    public Reserva cancelar(Long idReserva) {
 
-        Reserva reserva = reservaRepository.findById(idReserva)
-                .orElseThrow(() -> new NotFoundException("Reserva não encontrada"));
+        Reserva reserva = buscarPorId(idReserva);
 
-        if (!reserva.isAtiva()) {
-            throw new BusinessException("A reserva já está finalizada ou expirada");
+        if (reserva.getStatus() == StatusReserva.CANCELADA) {
+            throw new BusinessException("Reserva já foi cancelada");
         }
 
-        reserva.setAtiva(false);
+        reserva.setStatus(StatusReserva.CANCELADA);
+
         return reservaRepository.save(reserva);
     }
 
-    // -------------------------------------------------------
-    // Processar reservas expiradas
-    // -------------------------------------------------------
-    public void processarReservasExpiradas() {
-        LocalDate agora = LocalDate.now();
+    // Expirar reservas fora do prazo
+    public void expirarReservas() {
+        List<Reserva> reservas = reservaRepository.findAll();
 
-        reservaRepository.findAll().forEach(reserva -> {
-            if (reserva.isAtiva() && reserva.getDataLimite().isBefore(agora)) {
-                reserva.setAtiva(false);
-                reservaRepository.save(reserva);
-            }
-        });
+        reservas.stream()
+                .filter(r -> r.getStatus() == StatusReserva.ATIVA)
+                .filter(r -> r.getDataValidade().isBefore(LocalDateTime.now()))
+                .forEach(r -> {
+                    r.setStatus(StatusReserva.EXPIRADA);
+                    reservaRepository.save(r);
+                });
     }
 }

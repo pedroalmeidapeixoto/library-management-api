@@ -1,6 +1,5 @@
 package com.biblioteca.model;
 
-import com.biblioteca.model.enums.StatusEmprestimo;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -34,6 +33,4 @@ public class Emprestimo {
     @Column(name = "data_devolucao_real")
     private LocalDate dataDevolucaoReal;
 
-    @Enumerated(EnumType.STRING)
-    private StatusEmprestimo status;
 }

@@ -14,47 +14,37 @@ public class LivroService {
 
     private final LivroRepository livroRepository;
 
-    // -------------------------------------------------------
-    // Criar livro
-    // -------------------------------------------------------
+    // Criar
     public Livro criarLivro(Livro livro) {
         return livroRepository.save(livro);
     }
 
-    // -------------------------------------------------------
-    // Buscar livro por ID
-    // -------------------------------------------------------
+    // Buscar por ID
     public Livro buscarPorId(Long id) {
         return livroRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Livro não encontrado"));
     }
 
-    // -------------------------------------------------------
-    // Listar todos os livros
-    // -------------------------------------------------------
+    // Listar
     public List<Livro> listarTodos() {
         return livroRepository.findAll();
     }
 
-    // -------------------------------------------------------
-    // Atualizar livro
-    // -------------------------------------------------------
+    // Atualizar
     public Livro atualizar(Livro livroAtualizado) {
 
         Livro livro = livroRepository.findById(livroAtualizado.getId())
                 .orElseThrow(() -> new NotFoundException("Livro não encontrado"));
 
         livro.setTitulo(livroAtualizado.getTitulo());
-        livro.setAutor(livroAtualizado.getAutor());
-        livro.setCategoria(livroAtualizado.getCategoria());
         livro.setAnoPublicacao(livroAtualizado.getAnoPublicacao());
+        livro.setEditora(livroAtualizado.getEditora());
+        livro.setGenero(livroAtualizado.getGenero());
 
         return livroRepository.save(livro);
     }
 
-    // -------------------------------------------------------
-    // Remover livro
-    // -------------------------------------------------------
+    // Remover
     public void remover(Long id) {
 
         Livro livro = livroRepository.findById(id)
