@@ -7,7 +7,7 @@ import com.biblioteca.service.EmprestimoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+        import java.util.List;
 
 @RestController
 @RequestMapping("/emprestimos")
@@ -45,4 +45,11 @@ public class EmprestimoController {
                         .toList()
         );
     }
+    @PostMapping("/{id}/devolver-procedure")
+    public ResponseEntity<String> devolverViaProcedure(@PathVariable Long id) {
+        emprestimoService.executarDevolucaoProcedure(id);
+        return ResponseEntity.ok("Devolução processada com sucesso via procedure!");
+    }
+
+
 }

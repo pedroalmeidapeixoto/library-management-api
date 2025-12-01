@@ -15,9 +15,15 @@ import com.biblioteca.repository.ExemplarRepository;
 import com.biblioteca.repository.MultaRepository;
 import com.biblioteca.repository.ReservaRepository;
 import com.biblioteca.repository.UsuarioRepository;
+
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
+
+import java.sql.CallableStatement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -32,9 +38,13 @@ public class EmprestimoService {
     private final ExemplarRepository exemplarRepository;
     private final MultaRepository multaRepository;
     private final ReservaRepository reservaRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     private static final int PRAZO_PADRAO_DIAS = 7;
-    private static final double MULTA_POR_DIA = 2.0;
+
+    // ============================================================
+    // Buscar e Listar
+    // ============================================================
 
     public Emprestimo buscarPorId(Long id) {
         return emprestimoRepository.findById(id)
@@ -44,6 +54,10 @@ public class EmprestimoService {
     public List<Emprestimo> listar() {
         return emprestimoRepository.findAll();
     }
+
+    // ============================================================
+    // Criar Empréstimo
+    // ============================================================
 
     public Emprestimo realizarEmprestimo(Long idUsuario, Long idExemplar) {
 
@@ -57,7 +71,7 @@ public class EmprestimoService {
             throw new ConflictException("Exemplar não está disponível para empréstimo");
         }
 
-        // Cancelar reservas do usuário para esse exemplar
+        // Cancela reservas do usuário para esse exemplar
         reservaRepository.findByUsuarioId(idUsuario).stream()
                 .filter(r -> r.getExemplar().getId().equals(idExemplar))
                 .forEach(r -> {
@@ -76,6 +90,10 @@ public class EmprestimoService {
 
         return emprestimoRepository.save(emprestimo);
     }
+
+    // ============================================================
+    // Devolução NORMAL
+    // ============================================================
 
     public Emprestimo realizarDevolucao(Long idEmprestimo) {
 
@@ -108,9 +126,29 @@ public class EmprestimoService {
         Multa multa = new Multa();
         multa.setEmprestimo(emprestimo);
         multa.setDataAplicacao(LocalDateTime.now());
-        multa.setValor(diasAtraso * MULTA_POR_DIA);
+        multa.setValor(diasAtraso * 2.0);
         multa.setPago(false);
 
         multaRepository.save(multa);
     }
+
+    // ============================================================
+    // Devolução VIA PROCEDURE (PostgreSQL)
+    // ============================================================
+    @Transactional
+    public void executarDevolucaoProcedure(Long idEmprestimo) {
+
+        try (var connection = jdbcTemplate.getDataSource().getConnection();
+             CallableStatement stmt = connection.prepareCall(
+                     "CALL public.prc_realizar_devolucao(?::text)"
+             )) {
+
+            stmt.setInt(1, idEmprestimo.intValue());
+            stmt.execute();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao executar procedure: " + e.getMessage(), e);
+        }
+    }
+
 }
