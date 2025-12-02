@@ -1,80 +1,100 @@
 package com.biblioteca.service;
 
-import com.biblioteca.exception.NotFoundException;
-import com.biblioteca.model.Emprestimo;
-import com.biblioteca.model.Multa;
-import com.biblioteca.model.Reserva;
+import com.biblioteca.dto.usuario.UsuarioDTO;
+import com.biblioteca.dto.usuario.UsuarioResponseDTO;
+import com.biblioteca.mapper.UsuarioMapper;
 import com.biblioteca.model.Usuario;
-import com.biblioteca.repository.EmprestimoRepository;
-import com.biblioteca.repository.MultaRepository;
-import com.biblioteca.repository.ReservaRepository;
+import com.biblioteca.model.enums.StatusUsuario;
+import com.biblioteca.model.enums.TipoUsuario;
 import com.biblioteca.repository.UsuarioRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class UsuarioService {
 
-    private final UsuarioRepository usuarioRepository;
-    private final EmprestimoRepository emprestimoRepository;
-    private final ReservaRepository reservaRepository;
-    private final MultaRepository multaRepository;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
-    // -------------------------------------------------------
-    // Criar usuário (Controller chama este método)
-    // -------------------------------------------------------
-    public Usuario criar(Usuario usuario) {
-        return usuarioRepository.save(usuario);
+    @Autowired
+    private UsuarioMapper usuarioMapper;
+
+    @Transactional
+    public UsuarioResponseDTO salvar(UsuarioDTO usuarioDTO) {
+        if (usuarioRepository.existsByEmail(usuarioDTO.getEmail())) {
+            throw new RuntimeException("Email já cadastrado");
+        }
+
+        Usuario usuario = usuarioMapper.toEntity(usuarioDTO);
+        Usuario usuarioSalvo = usuarioRepository.save(usuario);
+        return usuarioMapper.toResponseDTO(usuarioSalvo);
     }
 
-    // -------------------------------------------------------
-    // Buscar usuário por ID
-    // -------------------------------------------------------
-    public Usuario buscarPorId(Long id) {
+    public List<UsuarioResponseDTO> listarTodos() {
+        return usuarioRepository.findAll().stream()
+                .map(usuarioMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public Optional<UsuarioResponseDTO> buscarPorId(Long id) {
         return usuarioRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+                .map(usuarioMapper::toResponseDTO);
     }
 
-    // -------------------------------------------------------
-    // Listar todos os usuários (Controller chama este método)
-    // -------------------------------------------------------
-    public List<Usuario> listar() {
-        return usuarioRepository.findAll();
+    public Optional<UsuarioResponseDTO> buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .map(usuarioMapper::toResponseDTO);
     }
 
-    // -------------------------------------------------------
-    // Deletar usuário (Controller chama este método)
-    // -------------------------------------------------------
+    public List<UsuarioResponseDTO> buscarPorNome(String nome) {
+        return usuarioRepository.findByNomeContainingIgnoreCase(nome).stream()
+                .map(usuarioMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<UsuarioResponseDTO> buscarPorTipo(TipoUsuario tipo) {
+        return usuarioRepository.findByTipo(tipo).stream()
+                .map(usuarioMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<UsuarioResponseDTO> buscarPorStatus(StatusUsuario status) {
+        return usuarioRepository.findByStatus(status).stream()
+                .map(usuarioMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public UsuarioResponseDTO atualizar(Long id, UsuarioDTO usuarioDTO) {
+        return usuarioRepository.findById(id)
+                .map(usuario -> {
+                    if (!usuario.getEmail().equals(usuarioDTO.getEmail()) &&
+                            usuarioRepository.existsByEmail(usuarioDTO.getEmail())) {
+                        throw new RuntimeException("Email já cadastrado");
+                    }
+
+                    usuarioMapper.updateEntityFromDTO(usuarioDTO, usuario);
+                    Usuario usuarioAtualizado = usuarioRepository.save(usuario);
+                    return usuarioMapper.toResponseDTO(usuarioAtualizado);
+                })
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + id));
+    }
+
+    @Transactional
     public void deletar(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
-        usuarioRepository.delete(usuario);
+        if (usuarioRepository.existsById(id)) {
+            usuarioRepository.deleteById(id);
+        } else {
+            throw new RuntimeException("Usuário não encontrado com ID: " + id);
+        }
     }
 
-    // -------------------------------------------------------
-    // Listar empréstimos do usuário
-    // -------------------------------------------------------
-    public List<Emprestimo> listarEmprestimos(Long idUsuario) {
-        buscarPorId(idUsuario); // valida existência
-        return emprestimoRepository.findByUsuarioId(idUsuario);
-    }
-
-    // -------------------------------------------------------
-    // Listar reservas do usuário
-    // -------------------------------------------------------
-    public List<Reserva> listarReservas(Long idUsuario) {
-        buscarPorId(idUsuario);
-        return reservaRepository.findByUsuarioId(idUsuario);
-    }
-
-    // -------------------------------------------------------
-    // Listar multas do usuário
-    // -------------------------------------------------------
-    public List<Multa> listarMultas(Long idUsuario) {
-        buscarPorId(idUsuario);
-        return multaRepository.findByEmprestimoUsuarioId(idUsuario);
+    public boolean existePorEmail(String email) {
+        return usuarioRepository.existsByEmail(email);
     }
 }

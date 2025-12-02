@@ -1,55 +1,80 @@
 package com.biblioteca.service;
 
-import com.biblioteca.exception.NotFoundException;
+import com.biblioteca.dto.livro.LivroDTO;
+import com.biblioteca.dto.livro.LivroResponseDTO;
+import com.biblioteca.mapper.LivroMapper;
 import com.biblioteca.model.Livro;
 import com.biblioteca.repository.LivroRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class LivroService {
 
-    private final LivroRepository livroRepository;
+    @Autowired
+    private LivroRepository livroRepository;
 
-    // Criar
-    public Livro criarLivro(Livro livro) {
-        return livroRepository.save(livro);
+    @Autowired
+    private LivroMapper livroMapper;
+
+    @Transactional
+    public LivroResponseDTO salvar(LivroDTO livroDTO) {
+        Livro livro = livroMapper.toEntity(livroDTO);
+        Livro livroSalvo = livroRepository.save(livro);
+        return livroMapper.toResponseDTO(livroSalvo);
     }
 
-    // Buscar por ID
-    public Livro buscarPorId(Long id) {
+    public List<LivroResponseDTO> listarTodos() {
+        return livroRepository.findAll().stream()
+                .map(livroMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public Optional<LivroResponseDTO> buscarPorId(Long id) {
         return livroRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Livro não encontrado"));
+                .map(livroMapper::toResponseDTO);
     }
 
-    // Listar
-    public List<Livro> listarTodos() {
-        return livroRepository.findAll();
+    public List<LivroResponseDTO> buscarPorTitulo(String titulo) {
+        return livroRepository.findByTituloContainingIgnoreCase(titulo).stream()
+                .map(livroMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
-    // Atualizar
-    public Livro atualizar(Livro livroAtualizado) {
-
-        Livro livro = livroRepository.findById(livroAtualizado.getId())
-                .orElseThrow(() -> new NotFoundException("Livro não encontrado"));
-
-        livro.setTitulo(livroAtualizado.getTitulo());
-        livro.setAnoPublicacao(livroAtualizado.getAnoPublicacao());
-        livro.setEditora(livroAtualizado.getEditora());
-        livro.setGenero(livroAtualizado.getGenero());
-
-        return livroRepository.save(livro);
+    public List<LivroResponseDTO> buscarPorGenero(String genero) {
+        return livroRepository.findByGeneroContainingIgnoreCase(genero).stream()
+                .map(livroMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
-    // Remover
-    public void remover(Long id) {
+    public List<LivroResponseDTO> buscarPorEditora(String editora) {
+        return livroRepository.findByEditoraContainingIgnoreCase(editora).stream()
+                .map(livroMapper::toResponseDTO)
+                .collect(Collectors.toList());
+    }
 
-        Livro livro = livroRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Livro não encontrado"));
+    @Transactional
+    public LivroResponseDTO atualizar(Long id, LivroDTO livroDTO) {
+        return livroRepository.findById(id)
+                .map(livro -> {
+                    livroMapper.updateEntityFromDTO(livroDTO, livro);
+                    Livro livroAtualizado = livroRepository.save(livro);
+                    return livroMapper.toResponseDTO(livroAtualizado);
+                })
+                .orElseThrow(() -> new RuntimeException("Livro não encontrado com ID: " + id));
+    }
 
-        livroRepository.delete(livro);
+    @Transactional
+    public void deletar(Long id) {
+        if (livroRepository.existsById(id)) {
+            livroRepository.deleteById(id);
+        } else {
+            throw new RuntimeException("Livro não encontrado com ID: " + id);
+        }
     }
 }
