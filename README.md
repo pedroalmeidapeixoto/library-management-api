@@ -1,110 +1,50 @@
-📚 Biblioteca Universitária – Sistema de Empréstimos
+📚 Biblioteca – Sistema de Gerenciamento (Spring Boot + SQL)
 
-API desenvolvida em Java + Spring Boot, com arquitetura limpa, DTOs, mappers MapStruct, validações, camadas separadas e integração com banco PostgreSQL (Supabase).
+Este projeto implementa um sistema completo de gerenciamento de uma biblioteca, utilizando Java com Spring Boot, banco de dados PostgreSQL e comunicação via API REST.
+A aplicação inclui controle de usuários, livros, exemplares, empréstimos, devoluções e cálculo de multas, integrando lógica de negócio com procedures SQL.
 
 🚀 Tecnologias Utilizadas
 
-Java 17
+Java 17+
 
-Spring Boot 3
+Spring Boot
 
 Spring Web
 
 Spring Data JPA
 
-PostgreSQL (Supabase)
+Exception Handler
 
-Lombok
+DTO + Mapper
 
-MapStruct
+PostgreSQL
 
-Flyway (opcional)
+Maven
 
-Jackson (configurado)
+Procedures em PL/pgSQL
 
-Arquitetura RESTful
+Lombok (para reduzir boilerplate)
 
-🏛 Arquitetura da Aplicação
+📁 Estrutura do Projeto
+BD-POO-Pierre/
+├── src/
+│   ├── main/java/com/biblioteca/
+│   │   ├── config/          # Configurações gerais (ex: CORS)
+│   │   ├── controller/      # Endpoints REST
+│   │   ├── dto/             # DTOs de entrada e saída
+│   │   ├── exception/       # Tratamento global de erros
+│   │   ├── mapper/          # Conversores DTO <-> Entidade
+│   │   ├── model/           # Entidades JPA
+│   │   ├── repository/      # Repositórios JPA
+│   │   ├── service/         # Regras de negócio
+│   │   └── BibliotecaApplication.java
+│   └── resources/
+│       └── application.properties
+└── pom.xml
 
-A aplicação segue uma arquitetura limpa por camadas:
+🛢️ Banco de Dados
 
-src/main/java/com/biblioteca
-│
-├── config/           → Configurações globais (CORS, Jackson etc.)
-│
-├── controller/       → Entrada da API (REST Controllers)
-│
-├── dto/              → DTOs (Request/Response)
-│
-├── exception/        → Exceptions customizadas + Exception Handler
-│
-├── mapper/           → MapStruct Mappers
-│
-├── model/            → Entidades JPA
-│
-├── repository/       → Interfaces JPA Repository
-│
-├── service/          → Lógica de negócio
-│
-└── util/             → Utilidades (data, validações etc.)
-
-📄 Funcionalidades Principais
-👤 Usuários
-
-Criar usuário
-
-Listar usuários
-
-Buscar por ID
-
-Excluir usuário
-
-📚 Livros
-
-Cadastro de livros
-
-Listagem
-
-Busca por ID
-
-📘 Exemplares
-
-Criar exemplar vinculado a um livro
-
-Listar exemplares
-
-Buscar por ID
-
-📆 Reservas
-
-Criar reserva de exemplar
-
-Listar reservas
-
-🔄 Empréstimos
-
-Realizar empréstimo
-
-Realizar devolução
-
-Listar empréstimos
-
-💰 Multas
-
-Listar multas
-
-Buscar multa por ID
-
-📝 Auditorias
-
-Listar auditorias
-
-Buscar auditoria por ID
-(modo somente leitura; registra empréstimos e devoluções)
-
-🧱 Estrutura das Entidades (resumo)
-
-O sistema implementa entidades:
+O projeto utiliza PostgreSQL com as seguintes principais entidades:
 
 Usuario
 
@@ -112,118 +52,117 @@ Livro
 
 Exemplar
 
-Reserva
-
 Emprestimo
 
-Multa
+Devolucao
 
-AuditoriaEmprestimo
+📌 Procedure utilizada no sistema
 
-Com relacionamentos:
+A aplicação faz uso direto da seguinte procedure para tratar devoluções:
 
-Livro 1—N Exemplar
+CREATE OR REPLACE PROCEDURE prc_realizar_devolucao(p_id_emprestimo INT)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+v_id_exemplar INT;
+v_data_prevista DATE;
+[...]
+$$;
 
-Usuario 1—N Emprestimo
 
-Exemplar 1—N Emprestimo
+(O conteúdo completo está no arquivo SQL enviado pelo usuário.)
 
-Emprestimo 1—1 Multa
+🧩 Funcionalidades
+✔️ Usuários
 
-Reserva (Usuario + Exemplar)
+Cadastro, edição, listagem e remoção
 
-🧩 MapStruct
+Tipos de usuário (aluno, professor etc.)
 
-Toda a conversão entre Entidade ↔ DTO é feita automaticamente pelos mappers:
+Status (ativo/inativo)
 
-UsuarioMapper
-LivroMapper
-ExemplarMapper
-ReservaMapper
-EmprestimoMapper
-MultaMapper
-AuditoriaMapper
+✔️ Livros e Exemplares
 
-🛠 Configurações Importantes
-🔧 Configurações adicionadas
+Cadastro de livros
 
-CORS liberado (CORSConfig)
+Controle de exemplares
 
-Configuração global do Jackson (datas, serialização)
+Associação livro → exemplar
 
-AuditConfig (estrutura para auditoria futura)
+✔️ Empréstimos
 
-🧰 Utilidades incluídas
+Criação de empréstimo
 
-DateUtils (cálculo de dias)
+Cálculo de datas previstas
 
-ValidationUtils (validação genérica)
+✔️ Devoluções
 
-UUIDUtils (geração de códigos)
+Integração com procedure SQL prc_realizar_devolucao
 
-🗄 Banco de Dados (Supabase)
+Cálculo e retorno de multa
 
-Para rodar o projeto, configure o seu application.properties:
+✔️ Respostas padronizadas
 
-spring.datasource.url=jdbc:postgresql://<supabase-url>:5432/postgres
+DTOs organizados
+
+DTOs de erro (ErrorResponse)
+
+DTOs de sucesso (LivroResponseDTO, UsuarioResponseDTO, TotalMultaResponse, etc.)
+
+🔐 CORS / Configuração
+
+O projeto possui CORSConfig configurado para permitir acesso pelo frontend:
+
+@Bean
+public WebMvcConfigurer corsConfigurer() { ... }
+
+▶️ Como Rodar o Projeto
+1. Clone o repositório
+   git clone <seu-repositorio>
+   cd BD-POO-Pierre
+
+2. Configure o banco de dados
+
+No arquivo application.properties:
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/ecommerce_supermercado
 spring.datasource.username=postgres
-spring.datasource.password=<sua-senha>
+spring.datasource.password=SUASENHA
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-
-▶ Como Rodar
-
-No terminal (ou pelo IntelliJ):
-
-mvn spring-boot:run
 
 
-Ou:
+O usuário pediu anteriormente para usar o nome do banco ecommerce_supermercado, então o exemplo já está ajustado.
 
-./mvnw spring-boot:run
+3. Execute o projeto
+   mvn spring-boot:run
 
-📬 Endpoints Principais
-Usuários
-
-POST /usuarios
-GET /usuarios
-GET /usuarios/{id}
+🌐 Endpoints Principais
+🔹 Usuários
+POST   /usuarios
+GET    /usuarios
+PUT    /usuarios/{id}
 DELETE /usuarios/{id}
 
-Livros
+🔹 Livros
+POST   /livros
+GET    /livros
+PUT    /livros/{id}
+DELETE /livros/{id}
 
-POST /livros
-GET /livros
-GET /livros/{id}
+🔹 Empréstimos / Devoluções
+POST /emprestimos
+POST /devolucoes/{idEmprestimo}
 
-Exemplares
+🧪 Testes
 
-POST /exemplares
-GET /exemplares
-GET /exemplares/{id}
+Os endpoints podem ser testados via:
 
-Reservas
+Insomnia
 
-POST /reservas?idUsuario=&idExemplar=
-GET /reservas
+Postman
 
-Empréstimos
+Thunder Client
 
-POST /emprestimos?idUsuario=&idExemplar=
-POST /emprestimos/devolucao/{id}
-GET /emprestimos
+Swagger (caso habilitado futuramente)
 
-Multas
-
-GET /multas
-GET /multas/{id}
-
-Auditorias
-
-GET /auditorias
-GET /auditorias/{id}
-
-👨‍💻 Desenvolvedores
-
-Projeto desenvolvido para disciplina de Banco de Dados com Programação Orientada a Objetos.
-
+Projeto desenvolvido para estudos de Banco de Dados, POO e Integração Back-end + SQL.
