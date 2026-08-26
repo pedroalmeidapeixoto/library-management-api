@@ -1,20 +1,29 @@
-### Maven ###
-target/
+# Maven
+/target/
 *.iml
 
-### IntelliJ ###
+# IntelliJ IDEA
 .idea/
 *.ipr
 *.iws
 
-### Spring ###
-application.properties
-application.yml
+# Local Spring configuration / secrets
+src/main/resources/application.properties
+src/main/resources/application.yml
 .env
+.env.*
+!.env.example
 
-### Logs ###
+# Logs
 *.log
 
-### OS ###
+# OS
 .DS_Store
 Thumbs.db
+
+# Editor
+.vscode/
+
+# Temporary files
+*.tmp
+*.swp

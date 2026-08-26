@@ -1,0 +1,513 @@
+{
+  "info": {
+    "_postman_id": "e02bc8a9-6fb0-4377-8728-e4d606921444",
+    "name": "library-management-api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "38493463"
+  },
+  "item": [
+    {
+      "name": "Procedure e Função",
+      "item": [
+        {
+          "name": "Devolução de Livro",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/emprestimos/1/devolver",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "emprestimos",
+                "1",
+                "devolver"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver multas Antes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/usuarios/1/multas",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "usuarios",
+                "1",
+                "multas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver multas Depois",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/emprestimos/1/devolver",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "emprestimos",
+                "1",
+                "devolver"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Exemplar Emprestado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/exemplares/101/disponivel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "exemplares",
+                "101",
+                "disponivel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Exemplar Disponível",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/exemplares/102/disponivel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "exemplares",
+                "102",
+                "disponivel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Usuário Inexistente",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/emprestimos/999/devolver",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "emprestimos",
+                "999",
+                "devolver"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Entidade Livro",
+      "item": [
+        {
+          "name": "Livro Postar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"titulo\": \"Dom Casmurro\",\r\n  \"anoPublicacao\": 1899,\r\n  \"editora\": \"Livros do Brasil\",\r\n  \"genero\": \"Romance\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/livros",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "livros"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Livro Receber",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/livros",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "livros"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Livro por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/livros/6",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "livros",
+                "6"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar Livro",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/livros/6",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "livros",
+                "6"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Entidade Usuario",
+      "item": [
+        {
+          "name": "Usuario Postar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"id\": 3,\r\n    \"nome\": \"Pedro Henrique Peixoto\",\r\n    \"tipo\": \"ALUNO\",\r\n    \"email\": \"pedro@email.com\",\r\n    \"telefone\": \"(83) 12345-6789\",\r\n    \"dataCadastro\": \"2025-11-04 19:45:54\",\r\n    \"status\": \"ATIVO\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/usuarios",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Usuario Receber",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/usuarios",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Usuario por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/usuarios/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuarios",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Deletar Usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/usuarios/3",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "usuarios",
+                "3"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Triggers e Funções",
+      "item": [
+        {
+          "name": "Criar Empréstimo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/emprestimos?usuarioId=2&exemplarId=100&dataPrevistaDevolucao=2024-12-31",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "emprestimos"
+              ],
+              "query": [
+                {
+                  "key": "usuarioId",
+                  "value": "2"
+                },
+                {
+                  "key": "exemplarId",
+                  "value": "100"
+                },
+                {
+                  "key": "dataPrevistaDevolucao",
+                  "value": "2024-12-31"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar empréstimos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/emprestimos",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "emprestimos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Empréstimo",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/emprestimos/2?status=ativo",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "emprestimos",
+                "2"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "ativo"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Receber Exemplares",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/exemplares",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "exemplares"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar Exemplares",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"idLivro\": 4,\r\n    \"localizacao\": \"Prateleira D4\",\r\n    \"status\": \"disponivel\",\r\n    \"dataAquisicao\": \"2024-01-15\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/exemplares",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "exemplares"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Exemplares",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/exemplares/1?status=disponivel",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "exemplares",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "disponivel"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Checando API",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/health",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "health"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

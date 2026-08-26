@@ -1,47 +1,70 @@
 package com.biblioteca.mapper;
 
-import com.biblioteca.dto.request.UsuarioRequestDTO;
-import com.biblioteca.dto.response.UsuarioResponseDTO;
-import com.biblioteca.mapper.UsuarioMapper;
+import com.biblioteca.dto.usuario.UsuarioDTO;
+import com.biblioteca.dto.usuario.UsuarioResponseDTO;
 import com.biblioteca.model.Usuario;
+import com.biblioteca.model.enums.StatusUsuario;
+import com.biblioteca.model.enums.TipoUsuario;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UsuarioMapperTest {
+class UsuarioMapperTest {
 
-    private final UsuarioMapper mapper = Mappers.getMapper(UsuarioMapper.class);
+    private final UsuarioMapper mapper = new UsuarioMapper();
 
     @Test
-    void testToEntity() {
-        UsuarioRequestDTO dto = new UsuarioRequestDTO();
+    void shouldMapDtoToEntity() {
+        UsuarioDTO dto = new UsuarioDTO();
         dto.setNome("Pedro");
+        dto.setTipo(TipoUsuario.ALUNO);
         dto.setEmail("pedro@example.com");
-        dto.setMatricula("2024001");
+        dto.setTelefone("83999999999");
+        dto.setStatus(StatusUsuario.ATIVO);
 
         Usuario usuario = mapper.toEntity(dto);
 
         assertNotNull(usuario);
         assertEquals("Pedro", usuario.getNome());
+        assertEquals(TipoUsuario.ALUNO, usuario.getTipo());
         assertEquals("pedro@example.com", usuario.getEmail());
-        assertEquals("2024001", usuario.getMatricula());
+        assertEquals("83999999999", usuario.getTelefone());
+        assertEquals(StatusUsuario.ATIVO, usuario.getStatus());
     }
 
     @Test
-    void testToResponseDTO() {
+    void shouldMapEntityToResponseDto() {
         Usuario usuario = new Usuario();
         usuario.setId(1L);
         usuario.setNome("Maria");
+        usuario.setTipo(TipoUsuario.PROFESSOR);
         usuario.setEmail("maria@example.com");
-        usuario.setMatricula("2023007");
+        usuario.setTelefone("83988888888");
+        usuario.setStatus(StatusUsuario.ATIVO);
 
         UsuarioResponseDTO dto = mapper.toResponseDTO(usuario);
 
         assertNotNull(dto);
         assertEquals(1L, dto.getId());
         assertEquals("Maria", dto.getNome());
+        assertEquals(TipoUsuario.PROFESSOR, dto.getTipo());
         assertEquals("maria@example.com", dto.getEmail());
-        assertEquals("2023007", dto.getMatricula());
+        assertEquals("83988888888", dto.getTelefone());
+        assertEquals(StatusUsuario.ATIVO, dto.getStatus());
+        assertEquals(usuario.getDataCadastro(), dto.getDataCadastro());
+    }
+
+    @Test
+    void shouldUpdateOnlyProvidedFields() {
+        Usuario usuario = new Usuario("Maria", TipoUsuario.PROFESSOR, "maria@example.com", "83988888888");
+        UsuarioDTO dto = new UsuarioDTO();
+        dto.setNome("Maria Silva");
+        dto.setTelefone(null);
+
+        mapper.updateEntityFromDTO(dto, usuario);
+
+        assertEquals("Maria Silva", usuario.getNome());
+        assertEquals("maria@example.com", usuario.getEmail());
+        assertEquals("83988888888", usuario.getTelefone());
     }
 }
