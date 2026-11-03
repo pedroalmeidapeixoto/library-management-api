@@ -23,14 +23,14 @@ public class Emprestimo {
     @Column(name = "data_emprestimo")
     private LocalDate dataEmprestimo = LocalDate.now();
 
-    @Column(name = "data_prevista_devolucao", nullable = false)
+    @Column(name = "data_devolucao_prevista", nullable = false)
     private LocalDate dataPrevistaDevolucao;
 
     @Column(name = "data_devolucao_real")
     private LocalDate dataDevolucaoReal;
 
     @Column(length = 20)
-    private String status = "pendente";
+    private String status = "ativo";
 
     @Column
     private String observacao;

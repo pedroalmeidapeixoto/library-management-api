@@ -2,7 +2,7 @@
 
 REST API for managing a library, built with **Java 17, Spring Boot, JPA and PostgreSQL**.
 
-The project models users, books, physical copies and loans, with business rules implemented in the service layer and a PostgreSQL **PL/pgSQL procedure** responsible for processing book returns and late fees.
+The project models users, books, physical copies and loans, with CRUD and loan rules in the service layer and a PostgreSQL **PL/pgSQL procedure**, functions and triggers responsible for processing book returns, late fees and loan validation. The schema is versioned with **Flyway**.
 
 > Backend-focused project created to practice REST API development, relational database modeling, object-oriented programming and database-side business logic.
 
@@ -16,8 +16,10 @@ The project models users, books, physical copies and loans, with business rules 
 - **PostgreSQL**
 - **PL/pgSQL**
 - Maven
+- Flyway (database migrations)
 - Lombok
-- JUnit 5 / Spring Boot Test
+- JUnit 5, Mockito, Spring Boot Test, Testcontainers
+- GitHub Actions
 - Postman
 
 ## Architecture
@@ -54,15 +56,17 @@ DTOs are used at the API boundary, while mappers keep entity/DTO conversion isol
 - Standardized error responses
 - Bean Validation
 - CORS configuration
-- PostgreSQL procedure integration
-- Unit tests for the mapper layer
+- PostgreSQL procedure, functions and triggers integration
+- Versioned schema migrations with Flyway
+- Unit tests (mapper and service layers) and integration tests on a real PostgreSQL
+- Continuous integration with GitHub Actions
 - Postman collection for API testing
 
 ## Database Logic
 
 One of the project's main technical points is the use of **PL/pgSQL** for database-side business logic.
 
-The procedure [`database/procedures/prc_realizar_devolucao.sql`](database/procedures/prc_realizar_devolucao.sql) handles a book return by:
+The procedure `prc_realizar_devolucao`, created by [`V2__procedure_realizar_devolucao.sql`](src/main/resources/db/migration/V2__procedure_realizar_devolucao.sql), handles a book return by:
 
 1. Finding the loan and its physical copy.
 2. Validating that the loan exists.
@@ -72,7 +76,25 @@ The procedure [`database/procedures/prc_realizar_devolucao.sql`](database/proced
 6. Updating the loan status.
 7. Making the physical copy available again.
 
-The SQL file is included in the repository so the database-side implementation can be inspected independently from the Java application.
+[`V4__functions_and_triggers.sql`](src/main/resources/db/migration/V4__functions_and_triggers.sql) adds the database-side pieces used by the loan and fine endpoints:
+
+- `fn_exemplar_disponivel`, `fn_calcular_total_multa_pendente` and `fn_multas_usuario`
+- `trg_validar_emprestimo`: rejects a loan for a copy that is not available
+- `trg_marcar_exemplar_emprestado`: marks the copy as borrowed when the loan is created
+- `trg_auditoria_emprestimo`: records every loan insert and update in `auditoria_emprestimo`
+
+## Database Migrations
+
+The schema is managed by Flyway. Migrations run automatically on startup from `src/main/resources/db/migration`:
+
+| Migration | Purpose |
+|---|---|
+| `V1__baseline_schema.sql` | Original schema: tables, enums, constraints, indexes and the `vw_usuario_saldo` view |
+| `V2__procedure_realizar_devolucao.sql` | Return procedure and late-fee calculation |
+| `V3__align_schema_with_jpa_model.sql` | Enums become `VARCHAR` + `CHECK`, ids become `BIGINT`, missing columns are added |
+| `V4__functions_and_triggers.sql` | Functions and triggers described above |
+
+Hibernate runs with `ddl-auto=validate`, so the application only starts when the migrated schema matches the JPA entities.
 
 ## API Testing
 
@@ -95,7 +117,7 @@ The collection can be found at:
 
 ```text
 postman/
-└── Library Management API.postman_collection.json
+└── library-management-api.postman_collection.json
 ```
 
 The requests use the local API:
@@ -108,11 +130,12 @@ http://localhost:8080
 
 ```text
 library-management-api/
+├── .github/workflows/
+│   └── ci.yml
 ├── database/
-│   └── procedures/
-│       └── prc_realizar_devolucao.sql
+│   └── dev_seed.sql
 ├── postman/
-│   └── Library Management API.postman_collection.json
+│   └── library-management-api.postman_collection.json
 ├── src/
 │   ├── main/
 │   │   ├── java/com/biblioteca/
@@ -125,7 +148,8 @@ library-management-api/
 │   │   │   ├── repository/
 │   │   │   └── service/
 │   │   └── resources/
-│   │       └── application-example.properties
+│   │       ├── application-example.properties
+│   │       └── db/migration/
 │   └── test/
 │       └── java/com/biblioteca/
 ├── .editorconfig
@@ -142,6 +166,7 @@ library-management-api/
 - Java 17+
 - Maven 3.9+
 - PostgreSQL 14+ recommended
+- Docker (only to run the integration tests)
 - Postman (optional, for API testing)
 
 ### 1. Clone the repository
@@ -159,7 +184,7 @@ Create a PostgreSQL database for the application:
 CREATE DATABASE biblioteca;
 ```
 
-The JPA configuration is set to `ddl-auto=update`, allowing Hibernate to create and update the mapped tables when the application starts.
+Flyway creates the whole schema when the application starts, so no table needs to be created by hand.
 
 ### 3. Configure the application
 
@@ -192,15 +217,24 @@ The API starts on:
 http://localhost:8080
 ```
 
-### 5. Install the PostgreSQL procedure
+### 5. Load sample data (optional)
 
-After the required tables exist, execute:
+The Postman collection expects a few users, books, copies and one overdue loan:
 
-```text
-database/procedures/prc_realizar_devolucao.sql
+```bash
+psql -d biblioteca -f database/dev_seed.sql
 ```
 
-in the application's PostgreSQL database.
+### Upgrading a database created before Flyway
+
+If you already have a database with the original schema (the one in `V1` and `V2`), tell Flyway to treat it as already at version 2 by adding to `application.properties`:
+
+```properties
+spring.flyway.baseline-on-migrate=true
+spring.flyway.baseline-version=2
+```
+
+Only `V3` and `V4` are then applied. `V3` converts the enum columns of existing rows (for example `aluno` becomes `ALUNO` in `usuario`).
 
 ## Main Endpoints
 
@@ -264,19 +298,18 @@ The return endpoint integrates the application with the PostgreSQL procedure res
 
 ## Testing
 
-Run the unit tests with:
-
 ```bash
-mvn test
+mvn verify
 ```
 
-The current test suite covers the `UsuarioMapper`, including:
+The suite has two layers:
 
-- DTO-to-entity conversion
-- Entity-to-response conversion
-- Partial entity updates
+- **Unit tests** (JUnit 5 and Mockito): `UsuarioMapper`, `EmprestimoService` and `DevolucaoService`.
+- **Integration tests** (`DatabaseIntegrationTest`, Testcontainers): start a PostgreSQL container, run the Flyway migrations and verify, through the application services, the return procedure, the late fee of R$ 1.50 per day, the loan triggers and the fine functions. Docker must be running.
 
-The Postman collection can be used to perform integration and endpoint testing against the running API.
+The same command runs in GitHub Actions on every push and pull request to `main`.
+
+The Postman collection can be used for manual endpoint testing against the running API.
 
 ## Security and Configuration
 
@@ -306,7 +339,10 @@ This project demonstrates:
 - PostgreSQL integration
 - PL/pgSQL procedure development
 - Database-side business rules
-- Unit testing with JUnit 5
+- Versioned database migrations with Flyway
+- Unit testing with JUnit 5 and Mockito
+- Integration testing on a real PostgreSQL with Testcontainers
+- Continuous integration with GitHub Actions
 - API testing with Postman
 - Maven project management
 

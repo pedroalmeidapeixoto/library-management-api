@@ -1,6 +1,8 @@
-CREATE OR REPLACE PROCEDURE public.prc_realizar_devolucao(IN p_id_emprestimo integer)
-LANGUAGE plpgsql
-AS $procedure$
+-- Return procedure: records the return, creates a late fee (R$ 1.50/day) and frees the copy.
+
+CREATE PROCEDURE public.prc_realizar_devolucao(IN p_id_emprestimo integer)
+    LANGUAGE plpgsql
+    AS $$
 DECLARE
     v_id_exemplar INT;
     v_data_prevista DATE;
@@ -42,4 +44,4 @@ BEGIN
     SET status = 'disponivel'
     WHERE id_exemplar = v_id_exemplar;
 END;
-$procedure$;
+$$;
